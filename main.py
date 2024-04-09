@@ -205,9 +205,16 @@ def main():
 
     # train_set = CustomDataset(csv_file='jute-pest-classification/train_256_preprocessed.csv', image_dir='jute-pest-classification/train_images_256_preprocessed/', transform=ApplyTransform(trainTransform))
     # test_set = CustomDataset(csv_file='jute-pest-classification/test.csv', image_dir='jute-pest-classification/test_images_256_preprocessed/', transform=ApplyTransform(testTransform))
+    print("Loading data...")
+    print()
 
     train_set = CustomDataset(csv_file='jute-pest-classification/train_256_preprocessed_encoded.csv', image_dir='jute-pest-classification/train_images_256_preprocessed/', transform=trainTransform)
     test_set = CustomDataset(csv_file='jute-pest-classification/test.csv', image_dir='jute-pest-classification/test_images_256_preprocessed/', transform=testTransform)
+
+    print("Data loaded")
+    print("Train set size: ", len(train_set))
+    print("Test set size: ", len(test_set))
+    print()
 
     # Split training dataset into training and validation sets
     train_size = int(0.8 * len(train_set))
@@ -218,13 +225,21 @@ def main():
     val_loader = DataLoader(val_set, shuffle=False, batch_size=32)
     test_loader = DataLoader(test_set, shuffle=False, batch_size=32)
 
+    print("Data loaders created")
+    print("Train loader size: ", len(train_loader))
+    print("Validation loader size: ", len(val_loader))
+    print("Test loader size: ", len(test_loader))
+    print()
+
     # Defining model and training options
+    print("Checking available GPU")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(
         "Using device: ",
         device,
         f"({torch.cuda.get_device_name(device)})" if torch.cuda.is_available() else "Not using CUDA",
     )
+    print()
 
     model = MyViT(
         (3, 224, 224), n_patches=14, n_blocks=2, hidden_d=8, n_heads=2, out_d=17

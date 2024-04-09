@@ -1,0 +1,17 @@
+Jute Stem Weevil: 0
+Mealybug: 1
+Black Hairy: 2
+Termite: 3
+Jute Aphid: 4
+Termite odontotermes (Rambur): 5
+Jute Stem Girdler: 6
+Yellow Mite: 7
+Pod Borer: 8
+Leaf Beetle: 9
+Beet Armyworm: 10
+Jute Hairy: 11
+Jute Red Mite: 12
+Field Cricket: 13
+Jute Semilooper: 14
+Scopula Emissaria: 15
+Cutworm: 16
