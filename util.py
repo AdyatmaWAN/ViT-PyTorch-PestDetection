@@ -1,10 +1,15 @@
+from ast import Str
 from gzip import _PaddedFile
 import multiprocessing
 import threading
+from tokenize import String
 import pandas as pd
 import numpy as np
 import os
 import cv2
+
+global pixel
+pixel = 256
 
 def preprocess():
     folder = 'jute-pest-classification/'
@@ -21,10 +26,10 @@ def preprocess():
     train_df = pd.read_csv(trainCSVFile)
     test_df = pd.read_csv(testCSVFile)
 
-    trainCSVFileOutput = folder + "train_512_preprocessed.csv"
+    trainCSVFileOutput = folder + "train_"+pixel+"_preprocessed.csv"
 
-    imageTrainDirOutput = folder + "train_images_512_preprocessed/"
-    imageTestDirOutput = folder + "test_images_512_preprocessed/"
+    imageTrainDirOutput = folder + "train_images_"+pixel+"_preprocessed/"
+    imageTestDirOutput = folder + "test_images_"+pixel+"_preprocessed/"
 
     # Load images and find maximum dimensions
     pool = multiprocessing.Pool()
@@ -63,28 +68,28 @@ def load_images_and_find_max_dimensions(args):
         image_path = os.path.join(image_dir, filename)
         image = cv2.imread(image_path)
 
-        # Resize the image to 512x512 while maintaining aspect ratio
+        # Resize the image to pixel x pixel while maintaining aspect ratio
         height, width, _ = image.shape
         if height == width:
-            resized_image = cv2.resize(image, (512, 512))
+            resized_image = cv2.resize(image, (pixel, pixel))
         elif height > width:
-            new_height = 512
-            new_width = int(width * (512 / height))
+            new_height = pixel
+            new_width = int(width * (pixel / height))
             resized_image = cv2.resize(image, (new_width, new_height))
             # Calculate padding for width and height
-            pad_height = (512 - new_height) // 2
-            pad_width = 512 - new_width
+            pad_height = (pixel - new_height) // 2
+            pad_width = pixel - new_width
             # Add padding around the image
-            resized_image = cv2.copyMakeBorder(resized_image, pad_height, 512 - new_height - pad_height, pad_width // 2, pad_width - pad_width // 2, cv2.BORDER_CONSTANT, value=(0, 0, 0))
+            resized_image = cv2.copyMakeBorder(resized_image, pad_height, pixel - new_height - pad_height, pad_width // 2, pad_width - pad_width // 2, cv2.BORDER_CONSTANT, value=(0, 0, 0))
         else:  # width > height
-            new_width = 512
-            new_height = int(height * (512 / width))
+            new_width = pixel
+            new_height = int(height * (pixel / width))
             resized_image = cv2.resize(image, (new_width, new_height))
             # Calculate padding for width and height
-            pad_width = (512 - new_width) // 2
-            pad_height = 512 - new_height
+            pad_width = (pixel - new_width) // 2
+            pad_height = pixel - new_height
             # Add padding around the image
-            resized_image = cv2.copyMakeBorder(resized_image, pad_height // 2, pad_height - pad_height // 2, pad_width, 512 - new_width - pad_width, cv2.BORDER_CONSTANT, value=(0, 0, 0))
+            resized_image = cv2.copyMakeBorder(resized_image, pad_height // 2, pad_height - pad_height // 2, pad_width, pixel - new_width - pad_width, cv2.BORDER_CONSTANT, value=(0, 0, 0))
 
         # Get the class label
         label = row[class_column_name]
@@ -144,3 +149,44 @@ def augment_tests_images(images, output_dir):
         cv2.imwrite(output_path, padded_image)
 
     return augmented_images_info
+
+def encode_the_classes():
+    folder = 'jute-pest-classification/'
+
+    # Path to your CSV file
+    trainCSVFile = folder + "train_"+str(pixel)+"_preprocessed.csv"
+
+    # Read the CSV file into a pandas DataFrame
+    df = pd.read_csv(trainCSVFile)
+
+    # Encoding classes
+    class_encoding = {cls: idx for idx, cls in enumerate(df['class'].unique())}
+    df['class'] = df['class'].map(class_encoding)  # Replace 'class' column with encoded values
+
+    # Save encoded DataFrame to CSV
+    df.to_csv(folder+"train_"+str(pixel)+"_preprocessed_encoded.csv", index=False)
+
+    # Save transformation dictionary
+    with open(folder+'transformation_dict.txt', 'w') as f:
+        for cls, idx in class_encoding.items():
+            f.write(f"{cls}: {idx}\n")
+
+def decode_the_classes():
+    # Load transformation dictionary
+    folder = 'jute-pest-classification/'
+
+    # Load submission.csv
+    submission_df = pd.read_csv(folder+'submission.csv')
+
+    # Load transformation dictionary
+    class_decoding = {}
+    with open(folder+'transformation_dict.txt', 'r') as f:
+        for line in f:
+            cls, idx = line.strip().split(': ')
+            class_decoding[int(idx)] = cls
+
+    # Decode class
+    submission_df['class_decoded'] = submission_df['class_encoded'].map(class_decoding)
+
+    # Save the decoded submission
+    submission_df.to_csv(folder+'decoded_submission.csv', index=False)
