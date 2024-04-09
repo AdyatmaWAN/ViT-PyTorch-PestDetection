@@ -264,10 +264,6 @@ def main():
             else:
                 raise TypeError("Unsupported batch format")
 
-                # Print the type and shape of x and y
-            print(type(x), type(y))
-            print(x.shape, y.shape)
-
             x, y = x.to(device), y.to(device)
             y_hat = model(x)
             loss = criterion(y_hat, y)
