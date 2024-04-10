@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import sys
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader, random_split
@@ -176,40 +177,39 @@ def get_positional_embeddings(sequence_length, d):
     return result
 
 
-def main():
-    # # Loading data
-    # transform = ToTensor()
-
-    # train_set = MNIST(
-    #     root="./../datasets", train=True, download=True, transform=transform
-    # )
-    # test_set = MNIST(
-    #     root="./../datasets", train=False, download=True, transform=transform
-    # )
+def train(pixelFrom, pixelTo, batchSize, nPatches, nBlocks, hiddenD, nHeads, outC, learningRate, nEpoch):
+    pixelF = pixelFrom
+    pixelT = pixelTo
+    batchSize = batchSize
+    nPatches = nPatches
+    nBlocks = nBlocks
+    hiddenD = hiddenD
+    nHeads = nHeads
+    outC = outC
+    learningRate = learningRate
+    nEpoch = nEpoch
 
     mean = [0.5, 0.5, 0.5]
     std = [0.5, 0.5, 0.5]
 
     trainTransform = transforms.Compose([
-        transforms.RandomCrop(224),
+        transforms.RandomCrop(pixelT),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
 
     testTransform = transforms.Compose([
-        transforms.Resize(224),
+        transforms.Resize(pixelT),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
 
-    # train_set = CustomDataset(csv_file='jute-pest-classification/train_256_preprocessed.csv', image_dir='jute-pest-classification/train_images_256_preprocessed/', transform=ApplyTransform(trainTransform))
-    # test_set = CustomDataset(csv_file='jute-pest-classification/test.csv', image_dir='jute-pest-classification/test_images_256_preprocessed/', transform=ApplyTransform(testTransform))
     print("Loading data...")
     print()
 
-    train_set = CustomDataset(csv_file='jute-pest-classification/train_256_preprocessed_encoded.csv', image_dir='jute-pest-classification/train_images_256_preprocessed/', transform=trainTransform)
-    test_set = CustomDataset(csv_file='jute-pest-classification/test.csv', image_dir='jute-pest-classification/test_images_256_preprocessed/', transform=testTransform)
+    train_set = CustomDataset(csv_file='jute-pest-classification/train_'+pixelF+'_preprocessed_encoded.csv', image_dir='jute-pest-classification/train_images_'+pixelF+'_preprocessed/', transform=trainTransform)
+    test_set = CustomDataset(csv_file='jute-pest-classification/test.csv', image_dir='jute-pest-classification/test_images_'+pixelF+'_preprocessed/', transform=testTransform)
 
     print("Data loaded")
     print("Train set size: ", len(train_set))
@@ -221,9 +221,9 @@ def main():
     val_size = len(train_set) - train_size
     train_set, val_set = random_split(train_set, [train_size, val_size])
 
-    train_loader = DataLoader(train_set, shuffle=True, batch_size=256)
-    val_loader = DataLoader(val_set, shuffle=False, batch_size=256)
-    test_loader = DataLoader(test_set, shuffle=False, batch_size=256)
+    train_loader = DataLoader(train_set, shuffle=True, batch_size=batchSize)
+    val_loader = DataLoader(val_set, shuffle=False, batch_size=batchSize)
+    test_loader = DataLoader(test_set, shuffle=False, batch_size=batchSize)
 
     print("Data loaders created")
     print("Train loader size: ", len(train_loader))
@@ -242,11 +242,11 @@ def main():
     print()
 
     model = MyViT(
-        (3, 224, 224), n_patches=14, n_blocks=2, hidden_d=16, n_heads=2, out_d=17
+        (3, pixelT, pixelT), n_patches=nPatches, n_blocks=nBlocks, hidden_d=hiddenD, n_heads=nHeads, out_d=outC
     ).to(device)
 
-    N_EPOCHS = 25
-    LR = 0.005
+    N_EPOCHS = nEpoch
+    LR = learningRate
 
     print("Model created")
     print("Number of epochs: ", N_EPOCHS)
@@ -281,11 +281,118 @@ def main():
 
         print(f"Epoch {epoch + 1}/{N_EPOCHS} loss: {train_loss:.2f}")
 
-    # Validation loop
-    with torch.no_grad():
-        correct, total = 0, 0
-        test_loss = 0.0
-        for batch in tqdm(val_loader, desc="Validation"):
+        # Validation loop
+        with torch.no_grad():
+            correct, total = 0, 0
+            test_loss = 0.0
+            for batch in tqdm(val_loader, desc="Validation"):
+                if isinstance(batch, tuple):
+                    x, y = batch
+                elif isinstance(batch, dict):
+                    x, y = batch['image'], batch['label']
+                else:
+                    raise TypeError("Unsupported batch format")
+
+                x, y = x.to(device), y.to(device)
+
+                y_hat = model(x)
+                loss = criterion(y_hat, y)
+                test_loss += loss.detach().cpu().item() / len(val_loader)
+
+                correct += torch.sum(torch.argmax(y_hat, dim=1) == y).detach().cpu().item()
+                total += len(x)
+            print(f"Val loss: {test_loss:.2f}")
+            print(f"Val accuracy: {correct / total * 100:.2f}%")
+
+    torch.save(model, 'ViT-'+pixelT+'-1st.pth')
+
+def contTrain(pixelFrom, pixelTo, batchSize, nPatches, nBlocks, hiddenD, nHeads, outC, learningRate, nEpoch, fileName):
+    pixelF = pixelFrom
+    pixelT = pixelTo
+    batchSize = batchSize
+    nPatches = nPatches
+    nBlocks = nBlocks
+    hiddenD = hiddenD
+    nHeads = nHeads
+    outC = outC
+    learningRate = learningRate
+    nEpoch = nEpoch
+    fileName = fileName
+
+    mean = [0.5, 0.5, 0.5]
+    std = [0.5, 0.5, 0.5]
+
+    trainTransform = transforms.Compose([
+        transforms.RandomCrop(pixelT),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ])
+
+    testTransform = transforms.Compose([
+        transforms.Resize(pixelT),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ])
+
+    print("Loading data...")
+    print()
+
+    train_set = CustomDataset(csv_file='jute-pest-classification/train_'+pixelF+'_preprocessed_encoded.csv', image_dir='jute-pest-classification/train_images_'+pixelF+'_preprocessed/', transform=trainTransform)
+    test_set = CustomDataset(csv_file='jute-pest-classification/test.csv', image_dir='jute-pest-classification/test_images_'+pixelF+'_preprocessed/', transform=testTransform)
+
+    print("Data loaded")
+    print("Train set size: ", len(train_set))
+    print("Test set size: ", len(test_set))
+    print()
+
+    # Split training dataset into training and validation sets
+    train_size = int(0.7 * len(train_set))
+    val_size = len(train_set) - train_size
+    train_set, val_set = random_split(train_set, [train_size, val_size])
+
+    train_loader = DataLoader(train_set, shuffle=True, batch_size=batchSize)
+    val_loader = DataLoader(val_set, shuffle=False, batch_size=batchSize)
+    test_loader = DataLoader(test_set, shuffle=False, batch_size=batchSize)
+
+    print("Data loaders created")
+    print("Train loader size: ", len(train_loader))
+    print("Validation loader size: ", len(val_loader))
+    print("Test loader size: ", len(test_loader))
+    print()
+
+    # Defining model and training options
+    print("Checking available GPU")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(
+        "Using device: ",
+        device,
+        f"({torch.cuda.get_device_name(device)})" if torch.cuda.is_available() else "Not using CUDA",
+    )
+    print()
+
+    model = torch.load(fileName)
+
+    N_EPOCHS = nEpoch
+    LR = learningRate
+
+    print("Model loaded")
+    print(f"Continuing training for {N_EPOCHS} epochs...")
+    print("Learning rate: ", LR)
+    print()
+
+    count = 0
+
+    # Training loop
+    optimizer = Adam(model.parameters(), lr=LR)
+    criterion = CrossEntropyLoss()
+    for epoch in trange(N_EPOCHS, desc="Training"):
+        count+= 1
+        train_loss = 0.0
+        for batch in tqdm(
+            train_loader, desc=f"Epoch {epoch + 1} in training", leave=False
+        ):
+
             if isinstance(batch, tuple):
                 x, y = batch
             elif isinstance(batch, dict):
@@ -294,17 +401,74 @@ def main():
                 raise TypeError("Unsupported batch format")
 
             x, y = x.to(device), y.to(device)
-
             y_hat = model(x)
             loss = criterion(y_hat, y)
-            test_loss += loss.detach().cpu().item() / len(val_loader)
 
-            correct += torch.sum(torch.argmax(y_hat, dim=1) == y).detach().cpu().item()
-            total += len(x)
-        print(f"Val loss: {test_loss:.2f}")
-        print(f"Val accuracy: {correct / total * 100:.2f}%")
+            train_loss += loss.detach().cpu().item() / len(train_loader)
 
-    torch.save(model, 'ViT-224-1st.pth')
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        print(f"Epoch {epoch + 1}/{N_EPOCHS} loss: {train_loss:.2f}")
+
+        # Validation loop
+        with torch.no_grad():
+            correct, total = 0, 0
+            test_loss = 0.0
+            for batch in tqdm(val_loader, desc="Validation"):
+                if isinstance(batch, tuple):
+                    x, y = batch
+                elif isinstance(batch, dict):
+                    x, y = batch['image'], batch['label']
+                else:
+                    raise TypeError("Unsupported batch format")
+
+                x, y = x.to(device), y.to(device)
+
+                y_hat = model(x)
+                loss = criterion(y_hat, y)
+                test_loss += loss.detach().cpu().item() / len(val_loader)
+
+                correct += torch.sum(torch.argmax(y_hat, dim=1) == y).detach().cpu().item()
+                total += len(x)
+            print(f"Val loss: {test_loss:.2f}")
+            print(f"Val accuracy: {correct / total * 100:.2f}%")
+
+        if count % 5 == 0:
+            print("Saving model...")
+            torch.save(model, 'ViT-'+pixelT+'-'+count+'.pth')
+
+    torch.save(model, 'ViT-'+pixelT+'-1st.pth')
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python main.py")
+        sys.exit(1)
+    elif sys.argv[1] == "startTrain":
+        if len(sys.argv) < 11:
+            print("Usage: python main.py startTrain pixelFrom pixelTo batchSize nPatches nBlocks hiddenD nHeads outC learningRate nEpoch")
+            sys.exit(1)
+        train(sys.argv[2], sys.argv[3], int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]), int(sys.argv[9]), float(sys.argv[10]), int(sys.argv[11]))
+        pass
+    elif sys.argv[1] == "startTest":
+        pass
+    elif sys.argv[1] == "startPredict":
+        pass
+    elif sys.argv[1] == "startPreprocess":
+        pass
+    elif sys.argv[1] == "continueTraining":
+        if len(sys.argv) < 12:
+            print("Usage: python main.py continueTraining pixelFrom pixelTo batchSize nPatches nBlocks hiddenD nHeads outC learningRate nEpoch fileName")
+            sys.exit(1)
+        contTrain(sys.argv[2], sys.argv[3], int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]), int(sys.argv[9]), float(sys.argv[10]), int(sys.argv[11]), sys.argv[12])
+        pass
+    elif sys.argv[1] == "startEncodeCategory":
+        pass
+    elif sys.argv[1] == "startDecodeCategory":
+        pass
+    else:
+        pass
 
 if __name__ == "__main__":
     main()
