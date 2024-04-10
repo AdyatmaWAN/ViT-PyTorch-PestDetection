@@ -306,15 +306,10 @@ def train(pixelFrom, pixelTo, batchSize, nPatches, nBlocks, hiddenD, nHeads, out
 
     torch.save(model, 'ViT-'+pixelT+'-1st.pth')
 
-def contTrain(pixelFrom, pixelTo, batchSize, nPatches, nBlocks, hiddenD, nHeads, outC, learningRate, nEpoch, fileName):
+def contTrain(pixelFrom, pixelTo, batchSize, learningRate, nEpoch, fileName):
     pixelF = pixelFrom
     pixelT = pixelTo
     batchSize = batchSize
-    nPatches = nPatches
-    nBlocks = nBlocks
-    hiddenD = hiddenD
-    nHeads = nHeads
-    outC = outC
     learningRate = learningRate
     nEpoch = nEpoch
     fileName = fileName
@@ -458,10 +453,10 @@ def main():
     elif sys.argv[1] == "startPreprocess":
         pass
     elif sys.argv[1] == "continueTraining":
-        if len(sys.argv) < 12:
+        if len(sys.argv) < 8:
             print("Usage: python main.py continueTraining pixelFrom pixelTo batchSize nPatches nBlocks hiddenD nHeads outC learningRate nEpoch fileName")
             sys.exit(1)
-        contTrain(sys.argv[2], sys.argv[3], int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]), int(sys.argv[9]), float(sys.argv[10]), int(sys.argv[11]), sys.argv[12])
+        contTrain(sys.argv[2], sys.argv[3], int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]), int(sys.argv[7]))
         pass
     elif sys.argv[1] == "startEncodeCategory":
         pass
