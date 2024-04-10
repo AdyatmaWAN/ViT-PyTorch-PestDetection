@@ -456,7 +456,7 @@ def main():
         if len(sys.argv) < 8:
             print("Usage: python main.py continueTraining pixelFrom pixelTo batchSize learningRate nEpoch fileName")
             sys.exit(1)
-        contTrain(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]), sys.argv[7])
+        contTrain(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), float(sys.argv[5]), int(sys.argv[6]), sys.argv[7])
         pass
     elif sys.argv[1] == "startEncodeCategory":
         pass
