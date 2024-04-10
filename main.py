@@ -193,14 +193,14 @@ def train(pixelFrom, pixelTo, batchSize, nPatches, nBlocks, hiddenD, nHeads, out
     std = [0.5, 0.5, 0.5]
 
     trainTransform = transforms.Compose([
-        transforms.RandomCrop(pixelT),
+        transforms.RandomCrop(int(pixelT)),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
 
     testTransform = transforms.Compose([
-        transforms.Resize(pixelT),
+        transforms.Resize(int(pixelT)),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
@@ -318,14 +318,14 @@ def contTrain(pixelFrom, pixelTo, batchSize, learningRate, nEpoch, fileName):
     std = [0.5, 0.5, 0.5]
 
     trainTransform = transforms.Compose([
-        transforms.RandomCrop(pixelT),
+        transforms.RandomCrop(int(pixelT)),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
 
     testTransform = transforms.Compose([
-        transforms.Resize(pixelT),
+        transforms.Resize(int(pixelT)),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
