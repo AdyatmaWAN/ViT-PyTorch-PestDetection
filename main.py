@@ -217,13 +217,13 @@ def main():
     print()
 
     # Split training dataset into training and validation sets
-    train_size = int(0.8 * len(train_set))
+    train_size = int(0.7 * len(train_set))
     val_size = len(train_set) - train_size
     train_set, val_set = random_split(train_set, [train_size, val_size])
 
-    train_loader = DataLoader(train_set, shuffle=True, batch_size=32)
-    val_loader = DataLoader(val_set, shuffle=False, batch_size=32)
-    test_loader = DataLoader(test_set, shuffle=False, batch_size=32)
+    train_loader = DataLoader(train_set, shuffle=True, batch_size=256)
+    val_loader = DataLoader(val_set, shuffle=False, batch_size=256)
+    test_loader = DataLoader(test_set, shuffle=False, batch_size=256)
 
     print("Data loaders created")
     print("Train loader size: ", len(train_loader))
@@ -242,11 +242,16 @@ def main():
     print()
 
     model = MyViT(
-        (3, 224, 224), n_patches=14, n_blocks=2, hidden_d=8, n_heads=2, out_d=17
+        (3, 224, 224), n_patches=14, n_blocks=2, hidden_d=16, n_heads=2, out_d=17
     ).to(device)
 
-    N_EPOCHS = 10
+    N_EPOCHS = 25
     LR = 0.005
+
+    print("Model created")
+    print("Number of epochs: ", N_EPOCHS)
+    print("Learning rate: ", LR)
+    print()
 
     # Training loop
     optimizer = Adam(model.parameters(), lr=LR)
@@ -281,8 +286,15 @@ def main():
         correct, total = 0, 0
         test_loss = 0.0
         for batch in tqdm(val_loader, desc="Validation"):
-            x, y = batch
+            if isinstance(batch, tuple):
+                x, y = batch
+            elif isinstance(batch, dict):
+                x, y = batch['image'], batch['label']
+            else:
+                raise TypeError("Unsupported batch format")
+
             x, y = x.to(device), y.to(device)
+
             y_hat = model(x)
             loss = criterion(y_hat, y)
             test_loss += loss.detach().cpu().item() / len(val_loader)
