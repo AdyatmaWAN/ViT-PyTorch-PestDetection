@@ -432,7 +432,7 @@ def contTrain(pixelFrom, pixelTo, batchSize, learningRate, nEpoch, fileName):
 
         if count % 5 == 0:
             print("Saving model...")
-            torch.save(model, 'ViT-'+pixelT+'-'+count+'.pth')
+            torch.save(model, 'ViT-'+pixelT+'-'+str(count)+'.pth')
 
     torch.save(model, 'ViT-'+pixelT+'-1st.pth')
 
