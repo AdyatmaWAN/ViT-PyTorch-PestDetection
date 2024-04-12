@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader, random_split
-from torchvision.datasets.mnist import CIFAR100, CIFAR10
+from torchvision.datasets.cifar import CIFAR100, CIFAR10
 from torchvision.transforms import ToTensor
 from torchvision import transforms
 from tqdm import tqdm, trange
