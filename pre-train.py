@@ -194,8 +194,8 @@ def main():
         root="./../datasets", train=False, download=True, transform=transform
     )
 
-    train_loader = DataLoader(train_set, shuffle=True, batch_size=512)
-    test_loader = DataLoader(test_set, shuffle=False, batch_size=512)
+    train_loader = DataLoader(train_set, shuffle=True, batch_size=4096)
+    test_loader = DataLoader(test_set, shuffle=False, batch_size=4096)
 
     # Defining model and training options
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
