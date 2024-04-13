@@ -180,19 +180,19 @@ def main():
     # Loading data
     transform = ToTensor()
 
-    train_set = CIFAR10(
-        root="./../datasets", train=True, download=True, transform=transform
-    )
-    test_set = CIFAR10(
-        root="./../datasets", train=False, download=True, transform=transform
-    )
-
-    # train_set = CIFAR100(
+    # train_set = CIFAR10(
     #     root="./../datasets", train=True, download=True, transform=transform
     # )
-    # test_set = CIFAR100(
+    # test_set = CIFAR10(
     #     root="./../datasets", train=False, download=True, transform=transform
     # )
+
+    train_set = CIFAR100(
+        root="./../datasets", train=True, download=True, transform=transform
+    )
+    test_set = CIFAR100(
+        root="./../datasets", train=False, download=True, transform=transform
+    )
 
     train_loader = DataLoader(train_set, shuffle=True, batch_size=512)
     test_loader = DataLoader(test_set, shuffle=False, batch_size=512)
@@ -205,7 +205,7 @@ def main():
         f"({torch.cuda.get_device_name(device)})" if torch.cuda.is_available() else "",
     )
     model = MyViT(
-        (3, 32, 32), n_patches=8, n_blocks=2, hidden_d=16, n_heads=2, out_d=10
+        (3, 32, 32), n_patches=8, n_blocks=2, hidden_d=16, n_heads=2, out_d=100
     ).to(device)
     N_EPOCHS = 200
     LR = 0.005
@@ -248,7 +248,7 @@ def main():
             print(f"Test accuracy: {correct / total * 100:.2f}%")
             print()
 
-    torch.save(model, 'vit-cifar10-pretrain-200.pth')
+    torch.save(model, 'vit-cifar100-pretrain-200.pth')
 
 if __name__ == "__main__":
     main()
