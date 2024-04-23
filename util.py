@@ -23,10 +23,10 @@ def preprocess():
     train_df = pd.read_csv(trainCSVFile)
     test_df = pd.read_csv(testCSVFile)
 
-    trainCSVFileOutput = folder + "train_"+pixel+"_preprocessed.csv"
+    trainCSVFileOutput = folder + "train_"+str(pixel)+"_preprocessed.csv"
 
-    imageTrainDirOutput = folder + "train_images_"+pixel+"_preprocessed/"
-    imageTestDirOutput = folder + "test_images_"+pixel+"_preprocessed/"
+    imageTrainDirOutput = folder + "train_images_"+str(pixel)+"_preprocessed/"
+    imageTestDirOutput = folder + "test_images_"+str(pixel)+"_preprocessed/"
 
     # Load images and find maximum dimensions
     pool = multiprocessing.Pool()
