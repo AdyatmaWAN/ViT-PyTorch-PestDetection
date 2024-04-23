@@ -304,7 +304,7 @@ def train(pixelFrom, pixelTo, batchSize, nPatches, nBlocks, hiddenD, nHeads, out
             print(f"Val loss: {test_loss:.2f}")
             print(f"Val accuracy: {correct / total * 100:.2f}%")
 
-    torch.save(model, 'ViT-'+pixelT+'-1st.pth')
+    torch.save(model, 'model/ViT-'+pixelT+'-1st.pth')
 
 def contTrain(pixelFrom, pixelTo, batchSize, learningRate, nEpoch, fileName):
     pixelF = pixelFrom
@@ -432,9 +432,9 @@ def contTrain(pixelFrom, pixelTo, batchSize, learningRate, nEpoch, fileName):
 
         if count % 5 == 0:
             print("Saving model...")
-            torch.save(model, 'ViT-'+pixelT+'-'+str(count)+'.pth')
+            torch.save(model, 'model/ViT-'+pixelT+'-'+str(count)+'.pth')
 
-    torch.save(model, 'ViT-'+pixelT+'-1st.pth')
+    torch.save(model, 'model/ViT-'+pixelT+'-1st.pth')
 
 def main():
     if len(sys.argv) < 2:
