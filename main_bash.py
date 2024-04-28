@@ -143,10 +143,10 @@ def main(batch, lr, opt_name):
         transforms.Normalize(mean, std)
     ])
 
-    testTransform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std)
-    ])
+    # testTransform = transforms.Compose([
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean, std)
+    # ])
 
     print("Loading data...")
     print()
@@ -184,7 +184,29 @@ def main(batch, lr, opt_name):
         val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
         test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
-    # X_train, y_train = X[train_index], Y[train_index]
+        # Print some information about the dataset
+        print("Train DataLoader Info:")
+        print("Number of batches in train_loader:", len(train_loader))
+        print("Number of samples in the train dataset:", len(train_loader.dataset))
+        print("Shape of the first batch of inputs:", next(iter(train_loader))[0].shape)
+        print("Shape of the first batch of labels:", next(iter(train_loader))[1].shape)
+        print()
+
+        print("Validation DataLoader Info:")
+        print("Number of batches in val_loader:", len(val_loader))
+        print("Number of samples in the validation dataset:", len(val_loader.dataset))
+        print("Shape of the first batch of inputs:", next(iter(val_loader))[0].shape)
+        print("Shape of the first batch of labels:", next(iter(val_loader))[1].shape)
+        print()
+
+        print("Test DataLoader Info:")
+        print("Number of batches in test_loader:", len(test_loader))
+        print("Number of samples in the test dataset:", len(test_loader.dataset))
+        print("Shape of the first batch of inputs:", next(iter(test_loader))[0].shape)
+        print("Shape of the first batch of labels:", next(iter(test_loader))[1].shape)
+        print()
+
+        # X_train, y_train = X[train_index], Y[train_index]
         # X_test, y_test = X[test_index], Y[test_index]
         #
         # X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, stratify=y_train, test_size=0.1)
