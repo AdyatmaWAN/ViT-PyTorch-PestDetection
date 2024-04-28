@@ -1,3 +1,4 @@
+import os
 import sys
 import torch
 import torch.nn as nn
@@ -10,7 +11,7 @@ import random
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score, precision_score, recall_score, roc_curve, auc
 from sklearn.model_selection import train_test_split
-
+from tqdm import tqdm
 from load import CustomDataset
 from vit import ViT
 
@@ -52,9 +53,10 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
     best_val_loss = float('inf')
     patience = 0
     for epoch in range(num_epochs):
+        train_iterator = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False)
         model.train()
         train_loss = 0.0
-        for inputs, labels in train_loader:
+        for inputs, labels in train_iterator:
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
@@ -62,16 +64,19 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
             loss.backward()
             optimizer.step()
             train_loss += loss.item() * inputs.size(0)
+            train_iterator.set_postfix(train_loss=train_loss / ((train_iterator.n - 1) * train_loader.batch_size))
         train_loss /= len(train_loader.dataset)
 
         model.eval()
         val_loss = 0.0
-        for inputs, labels in val_loader:
+        val_iterator = tqdm(val_loader, desc=f"Validation", leave=False)
+        for inputs, labels in val_iterator:
             inputs, labels = inputs.to(device), labels.to(device)
             with torch.no_grad():
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 val_loss += loss.item() * inputs.size(0)
+                val_iterator.set_postfix(val_loss=val_loss / ((val_iterator.n - 1) * val_loader.batch_size))
         val_loss /= len(val_loader.dataset)
 
         print(f"Fold: {fold}, Epoch: {epoch+1}, Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
@@ -124,6 +129,34 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
     print("Test Recall:", test_recall)
     print("Test Specificity:", test_specificity)
     print("Test AUC:", test_auc)
+
+    test_results = pd.DataFrame({
+        "batch": [batch_size],
+        "lr": [lr],
+        "Optimization": [opt_name],
+        "Fold": [fold],
+        "Test F1": [test_f1],
+        "Test Accuracy": [test_accuracy],
+        "Test Precision": [test_precision],
+        "Test Recall": [test_recall],
+        "Test Specificity": [test_specificity],
+        "Test AUC": [test_auc]
+    })
+
+    # Determine Excel file path
+    excel_file_path = f"test_results.xlsx"
+
+    # Check if Excel file exists
+    if os.path.isfile(excel_file_path):
+        # If file exists, open it and append new data
+        existing_data = pd.read_excel(excel_file_path)
+        combined_data = pd.concat([existing_data, test_results], ignore_index=True)
+        combined_data.to_excel(excel_file_path, index=False)
+        print("Test results appended to existing Excel file:", excel_file_path)
+    else:
+        # If file doesn't exist, create a new Excel file and save the data
+        test_results.to_excel(excel_file_path, index=False)
+        print("Test results saved to new Excel file:", excel_file_path)
 
 # Main function
 def main(batch, lr, opt_name):
