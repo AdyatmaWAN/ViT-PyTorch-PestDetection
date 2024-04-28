@@ -219,11 +219,11 @@ def main(batch, lr, opt_name):
         train_data_df, test_data_df = data_df.iloc[train_index], data_df.iloc[test_index]
         train_indices, val_indices = train_test_split(train_index, test_size=0.1, stratify=labels[train_index])
 
-        print(train_data_df.shape)
-        print(test_data_df.shape)
-        print()
-        print(train_indices.shape)
-        print(val_indices.shape)
+        # print(train_data_df.shape)
+        # print(test_data_df.shape)
+        # print()
+        # print(train_indices.shape)
+        # print(val_indices.shape)
 
         # Create train, validation, and test datasets
         train_data = CustomDataset(csv_file=csv_train, image_dir=img_train_dir, transform=trainTransform)
@@ -234,10 +234,10 @@ def main(batch, lr, opt_name):
         train_data = Subset(train_data, train_indices)
         val_data = Subset(val_data, val_indices)
         test_data = Subset(test_data, test_index)
-
-        print(len(train_data))
-        print(len(val_data))
-        print(len(test_data))
+        #
+        # print(len(train_data))
+        # print(len(val_data))
+        # print(len(test_data))
 
         # Create DataLoader objects
         train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False)
