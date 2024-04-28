@@ -231,9 +231,13 @@ def main(batch, lr, opt_name):
         test_data = CustomDataset(csv_file=csv_train, image_dir=img_train_dir, transform=testTransform)
 
         # Assign indices for train, validation, and test datasets
-        train_data.indices = train_indices
-        val_data.indices = val_indices
-        test_data.indices = test_index
+        train_data = Subset(train_data, train_indices)
+        val_data = Subset(val_data, val_indices)
+        test_data = Subset(test_data, test_index)
+
+        print(len(train_data))
+        print(len(val_data))
+        print(len(test_data))
 
         # Create DataLoader objects
         train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False)
