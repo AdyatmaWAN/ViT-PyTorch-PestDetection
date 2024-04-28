@@ -143,10 +143,10 @@ def main(batch, lr, opt_name):
         transforms.Normalize(mean, std)
     ])
 
-    # testTransform = transforms.Compose([
-    #     transforms.ToTensor(),
-    #     transforms.Normalize(mean, std)
-    # ])
+    testTransform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ])
 
     print("Loading data...")
     print()
@@ -169,17 +169,23 @@ def main(batch, lr, opt_name):
     print()
 
     # Use Stratified K-Fold cross-validation
-    kf = StratifiedKFold(n_splits=10)
+    kf = StratifiedKFold(n_splits=1)
     for fold, (train_index, test_index) in enumerate(kf.split(data_df, labels)):
-        train_data = Subset(train_set, train_index)
-        test_data = Subset(train_set, test_index)
-
-        # Further split train data into train and validation sets
+        # Split data indices into train, validation, and test
+        train_data_df, test_data_df = data_df.iloc[train_index], data_df.iloc[test_index]
         train_indices, val_indices = train_test_split(train_index, test_size=0.1, stratify=labels[train_index])
 
-        train_data = Subset(train_set, train_indices)
-        val_data = Subset(train_set, val_indices)
+        # Create train, validation, and test datasets
+        train_data = CustomDataset(csv_file=csv_train, image_dir=img_train_dir, transform=trainTransform)
+        val_data = CustomDataset(csv_file=csv_train, image_dir=img_train_dir, transform=testTransform)
+        test_data = CustomDataset(csv_file=csv_train, image_dir=img_train_dir, transform=testTransform)
 
+        # Assign indices for train, validation, and test datasets
+        train_data.indices = train_indices
+        val_data.indices = val_indices
+        test_data.indices = test_index
+
+        # Create DataLoader objects
         train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
         test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
@@ -221,7 +227,7 @@ if __name__ == "__main__":
     c, w, h = 3, 224, 224
 
     weight_decay = 0.001
-    num_epochs = 5
+    num_epochs = 2
 
     image_size = 224
     patch_size = 16
