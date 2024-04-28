@@ -119,7 +119,11 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
     test_loss /= len(test_loader.dataset)
 
     predictions = np.array(predictions)
+    print(predictions)
+    print(predictions.shape)
     true_labels = np.array(true_labels)
+    print(true_labels)
+    print(true_labels.shape)
 
     print(f"Fold: {fold}, Test Loss: {test_loss:.6f}")
 
