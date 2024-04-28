@@ -42,7 +42,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
     # model = TransformerModel(input_shape=(50, 64, 64, 1), head_size=128, num_heads=4, ff_dim=4, num_transformer_blocks=4, mlp_units=[64, 32], dropout=0, mlp_dropout=0.05)
     model.to(device)
 
-    criterion = nn.BCELoss()
+    criterion = nn.CrossEntropyLoss()
     if opt_name == "SGD":
         optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
     else:
@@ -55,9 +55,6 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
         model.train()
         train_loss = 0.0
         for inputs, labels in train_loader:
-            print("Train data type:", type(inputs), type(labels))
-            print("Train data shape:", inputs.shape, labels.shape)
-
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
@@ -191,19 +188,11 @@ def main(batch, lr, opt_name):
         test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
         # Print some information about the DataLoader objects
-        print(f"Fold: {fold}")
         print("Train DataLoader Info:")
-        print("Number of batches in train_loader:", len(train_loader))
-        print("Number of samples in the train dataset:", len(train_loader.dataset))
-
-        # Check the first batch in train_loader
-        try:
-            inputs, labels = next(iter(train_loader))
-            print("Shape of the first batch of inputs:", inputs.shape)
-            print("Shape of the first batch of labels:", labels.shape)
-        except Exception as e:
-            print("Error occurred while accessing the first batch of train_loader:", e)
-
+        print("Number of batches in train_loader:", len(test_loader))
+        print("Number of samples in the test dataset:", len(test_loader.dataset))
+        print("Shape of the first batch of inputs:", next(iter(test_loader))[0].shape)
+        print("Shape of the first batch of labels:", next(iter(test_loader))[1].shape)
         print()
 
         print("Validation DataLoader Info:")
