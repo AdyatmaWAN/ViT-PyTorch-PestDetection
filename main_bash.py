@@ -64,6 +64,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
             loss.backward()
             optimizer.step()
             train_loss += loss.item() * inputs.size(0)
+            print(train_iterator.n)
             train_iterator.set_postfix(train_loss=train_loss / ((train_iterator.n - 1) * train_loader.batch_size))
         train_loss /= len(train_loader.dataset)
 
