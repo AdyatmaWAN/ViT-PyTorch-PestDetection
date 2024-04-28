@@ -119,21 +119,22 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
     test_loss /= len(test_loader.dataset)
 
     predictions = np.array(predictions)
-    print(predictions)
-    print(predictions.shape)
+    pred_labels = np.argmax(predictions, axis=1)
+    # print(pred_labels)
+    # print(pred_labels.shape)
     true_labels = np.array(true_labels)
-    print(true_labels)
-    print(true_labels.shape)
+    # print(true_labels)
+    # print(true_labels.shape)
 
     print(f"Fold: {fold}, Test Loss: {test_loss:.6f}")
 
     # Calculate metrics
-    test_f1 = f1_score(true_labels, predictions.round())
-    test_accuracy = accuracy_score(true_labels, predictions.round())
-    test_precision = precision_score(true_labels, predictions.round())
-    test_recall = recall_score(true_labels, predictions.round())
-    test_specificity = recall_score(true_labels, predictions.round(), pos_label=0)
-    fpr, tpr, thresholds = roc_curve(true_labels, predictions)
+    test_f1 = f1_score(true_labels, pred_labels.round())
+    test_accuracy = accuracy_score(true_labels, pred_labels.round())
+    test_precision = precision_score(true_labels, pred_labels.round())
+    test_recall = recall_score(true_labels, pred_labels.round())
+    test_specificity = recall_score(true_labels, pred_labels.round(), pos_label=0)
+    fpr, tpr, thresholds = roc_curve(true_labels, pred_labels)
     test_auc = auc(fpr, tpr)
 
     print("Test F1:", test_f1)
