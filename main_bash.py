@@ -181,8 +181,8 @@ def main(batch, lr, opt_name):
     std = [0.3002451276771523, 0.2678455320690934, 0.27645630883075295]
 
     trainTransform = transforms.Compose([
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
+        # transforms.RandomHorizontalFlip(),
+        # transforms.RandomVerticalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
@@ -213,7 +213,7 @@ def main(batch, lr, opt_name):
     print()
 
     # Use Stratified K-Fold cross-validation
-    kf = StratifiedKFold(n_splits=2)
+    kf = StratifiedKFold(n_splits=5)
     for fold, (train_index, test_index) in enumerate(kf.split(data_df, labels)):
         # Split data indices into train, validation, and test
         train_data_df, test_data_df = data_df.iloc[train_index], data_df.iloc[test_index]
@@ -281,23 +281,23 @@ if __name__ == "__main__":
     c, w, h = 3, 224, 224
 
     weight_decay = 0.001
-    num_epochs = 2
+    num_epochs = 1000
 
-    image_size = 224
+    image_size = 128
     patch_size = 16
     num_classes = 17
+    dim = 16
     # dim = 1024
-    dim = 2
-    depth = 6
+    depth = 16
+    # depth = 6
     heads = 16
+    # heads = 16
     # mlp_dim = 2048
-    mlp_dim = 2
+    mlp_dim = 64
+    # mlp_dim = 2
     dropout = 0.1
     emb_dropout = 0.1
-    # image_size = 224  # We'll resize input images to this size
-    # patch_size = 16  # Size of the patches to be extract from the input images
-    # num_patches = (image_size // patch_size) ** 2
-    # num_heads = 4
+
 
     # Set seed for reproducibility
     SEED = 1

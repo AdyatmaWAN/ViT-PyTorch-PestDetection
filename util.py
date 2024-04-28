@@ -6,7 +6,7 @@ import os
 import cv2
 
 global pixel
-pixel = 224
+pixel = 128
 
 def preprocess():
     folder = 'jute-pest-classification/'
