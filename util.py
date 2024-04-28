@@ -37,6 +37,9 @@ def preprocess():
     images_train = results_train[0]
     images_test = results_train[1]
 
+    # Calculate mean and std
+    mean, std = calculate_mean_std(images_train)
+
     # Perform image augmentation
     pool = multiprocessing.Pool()
     augmented_images_info_train = pool.starmap(augment_images, [(images_train, imageTrainDirOutput)])
@@ -47,6 +50,24 @@ def preprocess():
     # Create a new DataFrame for augmented images info
     augmented_df_train = pd.DataFrame(augmented_images_info_train[0], columns=['filename', 'class'])
     augmented_df_train.to_csv(trainCSVFileOutput, index=False)
+
+    # Create a new DataFrame for augmented images info
+    print("Preprocessing done")
+    print("Mean: ", mean)
+    print("Std: ", std)
+    return mean, std
+
+
+# Function to calculate mean and std
+def calculate_mean_std(images):
+    pixels = []
+    for image, _, _ in images:
+        pixels.append(image.flatten())
+    pixels = np.concatenate(pixels, axis=0)
+    mean = np.mean(pixels, axis=0) / 255.0
+    std = np.std(pixels, axis=0) / 255.0
+    return mean, std
+
 
 # Function to load images and find the maximum dimensions
 def load_images_and_find_max_dimensions(args):
@@ -95,6 +116,7 @@ def load_images_and_find_max_dimensions(args):
 
     return images
 
+
 # Function to perform image augmentation
 def augment_images(images, output_dir):
     augmented_images_info = []
@@ -108,12 +130,12 @@ def augment_images(images, output_dir):
         output_path = os.path.join(output_dir, filename)
         cv2.imwrite(output_path, image)
 
-        for angle in [0]:
-            rotated_image = image #cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-            augmented_filename = f"{filename.split('.')[0]}_rotated_{angle}.{filename.split('.')[1]}"
-            augmented_images_info.append((augmented_filename, label))
-            output_path = os.path.join(output_dir, augmented_filename)
-            cv2.imwrite(output_path, rotated_image)
+        # for angle in [0]:
+        #     rotated_image = image #cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+        #     augmented_filename = f"{filename.split('.')[0]}_rotated_{angle}.{filename.split('.')[1]}"
+        #     augmented_images_info.append((augmented_filename, label))
+        #     output_path = os.path.join(output_dir, augmented_filename)
+        #     cv2.imwrite(output_path, rotated_image)
 
     # Create threads
     threads = []
@@ -127,6 +149,7 @@ def augment_images(images, output_dir):
         thread.join()
 
     return augmented_images_info
+
 
 # Function to perform image augmentation
 def augment_tests_images(images, output_dir):
@@ -146,6 +169,7 @@ def augment_tests_images(images, output_dir):
         cv2.imwrite(output_path, padded_image)
 
     return augmented_images_info
+
 
 def encode_the_classes():
     folder = 'jute-pest-classification/'
@@ -167,6 +191,7 @@ def encode_the_classes():
     with open(folder+'transformation_dict.txt', 'w') as f:
         for cls, idx in class_encoding.items():
             f.write(f"{cls}: {idx}\n")
+
 
 def decode_the_classes():
     # Load transformation dictionary
