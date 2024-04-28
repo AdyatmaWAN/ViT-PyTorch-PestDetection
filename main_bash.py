@@ -129,20 +129,20 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
     print(f"Fold: {fold}, Test Loss: {test_loss:.6f}")
 
     # Calculate metrics
-    test_f1 = f1_score(true_labels, pred_labels.round())
-    test_accuracy = accuracy_score(true_labels, pred_labels.round())
-    test_precision = precision_score(true_labels, pred_labels.round())
-    test_recall = recall_score(true_labels, pred_labels.round())
-    test_specificity = recall_score(true_labels, pred_labels.round(), pos_label=0)
-    fpr, tpr, thresholds = roc_curve(true_labels, pred_labels)
-    test_auc = auc(fpr, tpr)
+    test_f1 = f1_score(true_labels, pred_labels, average='macro')  # or 'micro', 'weighted'
+    test_accuracy = accuracy_score(true_labels, pred_labels)
+    test_precision = precision_score(true_labels, pred_labels, average='macro')  # or 'micro', 'weighted'
+    test_recall = recall_score(true_labels, pred_labels, average='macro')  # or 'micro', 'weighted'
+    # test_specificity = recall_score(true_labels, pred_labels.round(), pos_label=0)
+    # fpr, tpr, thresholds = roc_curve(true_labels, pred_labels)
+    # test_auc = auc(fpr, tpr)
 
     print("Test F1:", test_f1)
     print("Test Accuracy:", test_accuracy)
     print("Test Precision:", test_precision)
     print("Test Recall:", test_recall)
-    print("Test Specificity:", test_specificity)
-    print("Test AUC:", test_auc)
+    # print("Test Specificity:", test_specificity)
+    # print("Test AUC:", test_auc)
 
     test_results = pd.DataFrame({
         "batch": [batch_size],
@@ -153,8 +153,8 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
         "Test Accuracy": [test_accuracy],
         "Test Precision": [test_precision],
         "Test Recall": [test_recall],
-        "Test Specificity": [test_specificity],
-        "Test AUC": [test_auc]
+        # "Test Specificity": [test_specificity],
+        # "Test AUC": [test_auc]
     })
 
     # Determine Excel file path
@@ -219,6 +219,12 @@ def main(batch, lr, opt_name):
         train_data_df, test_data_df = data_df.iloc[train_index], data_df.iloc[test_index]
         train_indices, val_indices = train_test_split(train_index, test_size=0.1, stratify=labels[train_index])
 
+        print(train_data_df)
+        print(test_data_df)
+        print()
+        print(train_indices)
+        print(val_indices)
+
         # Create train, validation, and test datasets
         train_data = CustomDataset(csv_file=csv_train, image_dir=img_train_dir, transform=trainTransform)
         val_data = CustomDataset(csv_file=csv_train, image_dir=img_train_dir, transform=testTransform)
@@ -230,16 +236,16 @@ def main(batch, lr, opt_name):
         test_data.indices = test_index
 
         # Create DataLoader objects
-        train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+        train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False)
         val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
         test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
         # Print some information about the DataLoader objects
         print("Train DataLoader Info:")
-        print("Number of batches in train_loader:", len(test_loader))
-        print("Number of samples in the test dataset:", len(test_loader.dataset))
-        print("Shape of the first batch of inputs:", next(iter(test_loader))[0].shape)
-        print("Shape of the first batch of labels:", next(iter(test_loader))[1].shape)
+        print("Number of batches in train_loader:", len(train_loader))
+        print("Number of samples in the train dataset:", len(train_loader.dataset))
+        print("Shape of the first batch of inputs:", next(iter(train_loader))[0].shape)
+        print("Shape of the first batch of labels:", next(iter(train_loader))[1].shape)
         print()
 
         print("Validation DataLoader Info:")
