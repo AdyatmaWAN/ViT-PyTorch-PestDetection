@@ -64,8 +64,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
             loss.backward()
             optimizer.step()
             train_loss += loss.item() * inputs.size(0)
-            print(train_iterator.n)
-            train_iterator.set_postfix(train_loss=train_loss / ((train_iterator.n - 1) * train_loader.batch_size))
+
         train_loss /= len(train_loader.dataset)
 
         model.eval()
@@ -77,7 +76,6 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 val_loss += loss.item() * inputs.size(0)
-                val_iterator.set_postfix(val_loss=val_loss / ((val_iterator.n - 1) * val_loader.batch_size))
         val_loss /= len(val_loader.dataset)
 
         print(f"Fold: {fold}, Epoch: {epoch+1}, Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
