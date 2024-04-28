@@ -38,6 +38,12 @@ def set_seeds(seed):
 # def train_model(X_train, y_train, X_val, y_val, X_test, y_test, batch_size, lr, opt_name, fold):
 def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name, fold):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(
+        "Using device: ",
+        device,
+        f"({torch.cuda.get_device_name(device)})" if torch.cuda.is_available() else "Not using CUDA",
+    )
+    print()
 
     model = ViT(image_size=image_size, patch_size=patch_size, num_classes=num_classes, dim=dim, depth=depth, heads=heads, mlp_dim=mlp_dim, dropout=dropout, emb_dropout=emb_dropout)
     # model = TransformerModel(input_shape=(50, 64, 64, 1), head_size=128, num_heads=4, ff_dim=4, num_transformer_blocks=4, mlp_units=[64, 32], dropout=0, mlp_dropout=0.05)
@@ -93,7 +99,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
     torch.save(model.state_dict(), f"model/fold_{fold}_batch_{batch_size}_lr_{lr}_opt_{opt_name}.pt")
 
     # Test the model
-    test_loader = DataLoader(test_loader, batch_size=batch_size, shuffle=False)
+    test_loader = test_loader
     model.eval()
     test_loss = 0.0
     predictions = []
