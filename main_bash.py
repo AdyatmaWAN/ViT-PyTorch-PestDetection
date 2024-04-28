@@ -55,6 +55,8 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
         model.train()
         train_loss = 0.0
         for inputs, labels in train_loader:
+            print(inputs.shape, " ",labels.shape)
+
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
