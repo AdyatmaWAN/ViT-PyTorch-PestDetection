@@ -60,13 +60,30 @@ def preprocess():
 
 # Function to calculate mean and std
 def calculate_mean_std(images):
-    pixels = []
-    for image, _, _ in images:
-        pixels.append(image.flatten())
-    pixels = np.concatenate(pixels, axis=0)
-    mean = np.mean(pixels, axis=0) / 255.0
-    std = np.std(pixels, axis=0) / 255.0
-    return mean, std
+    # Initialize lists to store pixel values for each channel
+    channel_means = []
+    channel_stds = []
+
+    # Iterate through each channel (BGR)
+    for channel in range(3):
+        channel_pixels = []
+
+        # Extract pixel values for the current channel
+        for image, _, _ in images:
+            channel_pixels.append(image[:, :, channel].flatten())
+
+        # Concatenate all pixel values for the current channel
+        channel_pixels = np.concatenate(channel_pixels, axis=0)
+
+        # Calculate mean and standard deviation for the current channel
+        mean = np.mean(channel_pixels) / 255.0  # Normalize mean to [0, 1]
+        std = np.std(channel_pixels) / 255.0  # Normalize std to [0, 1]
+
+        # Append mean and std to the respective lists
+        channel_means.append(mean)
+        channel_stds.append(std)
+
+    return channel_means, channel_stds
 
 
 # Function to load images and find the maximum dimensions
