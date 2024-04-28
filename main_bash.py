@@ -58,7 +58,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
-            loss = criterion(outputs, labels.unsqueeze(1))
+            loss = criterion(outputs, labels)  # Remove unsqueeze(1) here
             loss.backward()
             optimizer.step()
             train_loss += loss.item() * inputs.size(0)
@@ -70,7 +70,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
             inputs, labels = inputs.to(device), labels.to(device)
             with torch.no_grad():
                 outputs = model(inputs)
-                loss = criterion(outputs, labels.unsqueeze(1))
+                loss = criterion(outputs, labels)
                 val_loss += loss.item() * inputs.size(0)
         val_loss /= len(val_loader.dataset)
 
@@ -98,7 +98,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
         for inputs, labels in test_loader:
             inputs, labels = inputs.to(device), labels.to(device)
             outputs = model(inputs)
-            loss = criterion(outputs, labels.unsqueeze(1))
+            loss = criterion(outputs, labels)
             test_loss += loss.item() * inputs.size(0)
             predictions.extend(outputs.cpu().numpy())
             true_labels.extend(labels.cpu().numpy())
