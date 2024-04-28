@@ -219,11 +219,11 @@ def main(batch, lr, opt_name):
         train_data_df, test_data_df = data_df.iloc[train_index], data_df.iloc[test_index]
         train_indices, val_indices = train_test_split(train_index, test_size=0.1, stratify=labels[train_index])
 
-        print(train_data_df)
-        print(test_data_df)
+        print(train_data_df.shape)
+        print(test_data_df.shape)
         print()
-        print(train_indices)
-        print(val_indices)
+        print(train_indices.shape)
+        print(val_indices.shape)
 
         # Create train, validation, and test datasets
         train_data = CustomDataset(csv_file=csv_train, image_dir=img_train_dir, transform=trainTransform)
