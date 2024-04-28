@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import sys
+import random
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader, random_split
@@ -13,6 +14,7 @@ from load import CustomDataset
 
 np.random.seed(0)
 torch.manual_seed(0)
+random.seed(0)
 
 def patchify(images, n_patches):
     n, c, h, w = images.shape
