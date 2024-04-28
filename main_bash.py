@@ -96,7 +96,11 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
                 break
 
     # Save model
-    torch.save(model.state_dict(), f"model/fold_{fold}_batch_{batch_size}_lr_{lr}_opt_{opt_name}.pt")
+    folder_path = f"model"
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    torch.save(model.state_dict(), f"{folder_path}/fold_{fold}_batch_{batch_size}_lr_{lr}_opt_{opt_name}.pt")
 
     # Test the model
     test_loader = test_loader
@@ -267,10 +271,12 @@ if __name__ == "__main__":
     image_size = 224
     patch_size = 16
     num_classes = 17
-    dim = 1024
+    # dim = 1024
+    dim = 16
     depth = 6
     heads = 16
-    mlp_dim = 2048
+    # mlp_dim = 2048
+    mlp_dim = 16
     dropout = 0.1
     emb_dropout = 0.1
     # image_size = 224  # We'll resize input images to this size
