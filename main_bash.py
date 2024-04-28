@@ -190,12 +190,20 @@ def main(batch, lr, opt_name):
         val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
         test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
-        # Print some information about the dataset
+        # Print some information about the DataLoader objects
+        print(f"Fold: {fold}")
         print("Train DataLoader Info:")
         print("Number of batches in train_loader:", len(train_loader))
         print("Number of samples in the train dataset:", len(train_loader.dataset))
-        print("Shape of the first batch of inputs:", next(iter(train_loader))[0].shape)
-        print("Shape of the first batch of labels:", next(iter(train_loader))[1].shape)
+
+        # Check the first batch in train_loader
+        try:
+            inputs, labels = next(iter(train_loader))
+            print("Shape of the first batch of inputs:", inputs.shape)
+            print("Shape of the first batch of labels:", labels.shape)
+        except Exception as e:
+            print("Error occurred while accessing the first batch of train_loader:", e)
+
         print()
 
         print("Validation DataLoader Info:")
