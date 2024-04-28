@@ -274,13 +274,13 @@ if __name__ == "__main__":
 
     image_size = 224
     patch_size = 16
-    num_classes = 17
+    num_classes = 1
     # dim = 1024
-    dim = 16
+    dim = 2
     depth = 6
     heads = 16
     # mlp_dim = 2048
-    mlp_dim = 16
+    mlp_dim = 2
     dropout = 0.1
     emb_dropout = 0.1
     # image_size = 224  # We'll resize input images to this size
