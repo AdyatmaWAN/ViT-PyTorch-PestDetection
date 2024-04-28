@@ -169,7 +169,7 @@ def main(batch, lr, opt_name):
     print()
 
     # Use Stratified K-Fold cross-validation
-    kf = StratifiedKFold(n_splits=1)
+    kf = StratifiedKFold(n_splits=2)
     for fold, (train_index, test_index) in enumerate(kf.split(data_df, labels)):
         # Split data indices into train, validation, and test
         train_data_df, test_data_df = data_df.iloc[train_index], data_df.iloc[test_index]
