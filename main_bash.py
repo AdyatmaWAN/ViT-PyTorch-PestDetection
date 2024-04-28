@@ -66,7 +66,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
-            loss = criterion(outputs, labels)  # Remove unsqueeze(1) here
+            loss = criterion(outputs, labels.unsqueeze(1))  # Remove unsqueeze(1) here
             loss.backward()
             optimizer.step()
             train_loss += loss.item() * inputs.size(0)
