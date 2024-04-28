@@ -130,8 +130,8 @@ def main(batch, lr, opt_name):
     # h5_file_path = 'data/fase2_interval_4ch_gray_128x128.h5'
     # X, Y = load_data(h5_file_path)
 
-    mean = [0.5, 0.5, 0.5]
-    std = [0.5, 0.5, 0.5]
+    mean = [0.4222541138533666, 0.5447886376476403, 0.5485434299736155]
+    std = [0.3002451276771523, 0.2678455320690934, 0.27645630883075295]
 
     trainTransform = transforms.Compose([
         transforms.RandomHorizontalFlip(),
