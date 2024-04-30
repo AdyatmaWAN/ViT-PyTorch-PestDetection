@@ -124,7 +124,8 @@ class ViT(nn.Module):
         )
 
     def forward(self, img):
-        x = self.to_patch_embedding(img)
+        device = next(self.parameters()).device  # Get the device of the model
+        x = self.to_patch_embedding(img.to(device))  # Move input to GPU if available
         b, n, _ = x.shape
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b = b)

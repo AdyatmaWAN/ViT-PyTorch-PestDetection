@@ -27,15 +27,27 @@ global heads
 global mlp_dim
 global dropout
 global emb_dropout
+global warmup_epochs
 
+
+# Set seed for reproducibility
 def set_seeds(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
+# Function to move data and model to appropriate device
+def to_device(data, device):
+    if isinstance(data, (list, tuple)):
+        return [to_device(x, device) for x in data]
+    return data.to(device, non_blocking=True)
 
 
 # Function to train model
-# def train_model(X_train, y_train, X_val, y_val, X_test, y_test, batch_size, lr, opt_name, fold):
 def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name, fold):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(
@@ -47,23 +59,33 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
 
     model = ViT(image_size=image_size, patch_size=patch_size, num_classes=num_classes, dim=dim, depth=depth, heads=heads, mlp_dim=mlp_dim, dropout=dropout, emb_dropout=emb_dropout)
     # model = TransformerModel(input_shape=(50, 64, 64, 1), head_size=128, num_heads=4, ff_dim=4, num_transformer_blocks=4, mlp_units=[64, 32], dropout=0, mlp_dropout=0.05)
-    model.to(device)
+    model = to_device(model, device)
 
     criterion = nn.CrossEntropyLoss()
     if opt_name == "SGD":
-        optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+        optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=weight_decay)
     else:
-        optimizer = getattr(optim, opt_name)(model.parameters(), lr=lr)
+        optimizer = getattr(optim, opt_name)(model.parameters(), lr=lr, weight_decay=weight_decay)
+
+        # Define the scheduler for warm-up
+    def adjust_learning_rate(optimizer, epoch, lr):
+        """ Adjusts the learning rate according to warm-up schedule """
+        if epoch < warmup_epochs:
+            lr = lr * float(epoch + 1) / warmup_epochs
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+        return lr
 
     # Training loop
     best_val_loss = float('inf')
     patience = 0
     for epoch in range(num_epochs):
-        train_iterator = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}", leave=False)
+        current_lr = adjust_learning_rate(optimizer, epoch, lr)
+        train_iterator = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs} - LR: {current_lr:.6f}", leave=False)
         model.train()
         train_loss = 0.0
         for inputs, labels in train_iterator:
-            inputs, labels = inputs.to(device), labels.to(device)
+            inputs, labels = to_device(inputs, device), to_device(labels, device)
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, labels)  # Remove unsqueeze(1) here
@@ -77,7 +99,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
         val_loss = 0.0
         val_iterator = tqdm(val_loader, desc=f"Validation", leave=False)
         for inputs, labels in val_iterator:
-            inputs, labels = inputs.to(device), labels.to(device)
+            inputs, labels = to_device(inputs, device), to_device(labels, device)
             with torch.no_grad():
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
@@ -278,26 +300,26 @@ def main(batch, lr, opt_name):
 
 
 if __name__ == "__main__":
-    c, w, h = 3, 224, 224
+    c, w, h = 3, 256, 256
 
-    weight_decay = 0.001
+    weight_decay = 0.05
     num_epochs = 1000
 
-    image_size = 128
-    patch_size = 16
+    image_size = 256
+    patch_size = 8
     num_classes = 17
-    dim = 16
-    # dim = 1024
+    # dim = 16
+    dim = 32
+    # depth = 16
     depth = 16
-    # depth = 6
-    heads = 16
     # heads = 16
-    # mlp_dim = 2048
+    heads = 16
     mlp_dim = 64
+    # mlp_dim = 64
     # mlp_dim = 2
     dropout = 0.1
     emb_dropout = 0.1
-
+    warmup_epochs = 10
 
     # Set seed for reproducibility
     SEED = 1
