@@ -14,6 +14,8 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 from load import CustomDataset
 from vit import ViT
+from lion_pytorch import Lion
+
 
 global weight_decay
 global num_epochs
@@ -28,6 +30,7 @@ global mlp_dim
 global dropout
 global emb_dropout
 global warmup_epochs
+global c
 
 
 # Set seed for reproducibility
@@ -48,7 +51,7 @@ def to_device(data, device):
 
 
 # Function to train model
-def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name, fold):
+def train_model(train_loader, val_loader, test_loader, batch, lr, opt_name, fold):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(
         "Using device: ",
@@ -57,13 +60,15 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
     )
     print()
 
-    model = ViT(image_size=image_size, patch_size=patch_size, num_classes=num_classes, dim=dim, depth=depth, heads=heads, mlp_dim=mlp_dim, dropout=dropout, emb_dropout=emb_dropout)
+    model = ViT(image_size=image_size, patch_size=patch_size, num_classes=num_classes, dim=dim, depth=depth, heads=heads, mlp_dim=mlp_dim, dropout=dropout, emb_dropout=emb_dropout, channels=c)
     # model = TransformerModel(input_shape=(50, 64, 64, 1), head_size=128, num_heads=4, ff_dim=4, num_transformer_blocks=4, mlp_units=[64, 32], dropout=0, mlp_dropout=0.05)
     model = to_device(model, device)
 
     criterion = nn.CrossEntropyLoss()
     if opt_name == "SGD":
         optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=weight_decay)
+    elif opt_name == "Lion":
+        optimizer = Lion(model.parameters(), lr=lr, weight_decay=weight_decay)
     else:
         optimizer = getattr(optim, opt_name)(model.parameters(), lr=lr, weight_decay=weight_decay)
 
@@ -122,7 +127,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    torch.save(model.state_dict(), f"{folder_path}/fold_{fold}_batch_{batch_size}_lr_{lr}_opt_{opt_name}.pt")
+    torch.save(model.state_dict(), f"{folder_path}/fold_{fold}_batch_{batch}_lr_{lr}_opt_{opt_name}.pt")
 
     # Test the model
     test_loader = test_loader
@@ -167,7 +172,7 @@ def train_model(train_loader, val_loader, test_loader, batch_size, lr, opt_name,
     # print("Test AUC:", test_auc)
 
     test_results = pd.DataFrame({
-        "batch": [batch_size],
+        "batch": [batch],
         "lr": [lr],
         "Optimization": [opt_name],
         "Fold": [fold],
@@ -205,11 +210,13 @@ def main(batch, lr, opt_name):
     trainTransform = transforms.Compose([
         # transforms.RandomHorizontalFlip(),
         # transforms.RandomVerticalFlip(),
+        # transforms.Grayscale(num_output_channels=1),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
 
     testTransform = transforms.Compose([
+        # transforms.Grayscale(num_output_channels=1),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])
@@ -262,9 +269,9 @@ def main(batch, lr, opt_name):
         # print(len(test_data))
 
         # Create DataLoader objects
-        train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False)
-        val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
-        test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
+        train_loader = DataLoader(train_data, batch_size=batch, shuffle=False)
+        val_loader = DataLoader(val_data, batch_size=batch, shuffle=False)
+        test_loader = DataLoader(test_data, batch_size=batch, shuffle=False)
 
         # Print some information about the DataLoader objects
         print("Train DataLoader Info:")
@@ -302,11 +309,11 @@ def main(batch, lr, opt_name):
 if __name__ == "__main__":
     c, w, h = 3, 256, 256
 
-    weight_decay = 0.05
+    weight_decay = 0.00005
     num_epochs = 1000
 
     image_size = 256
-    patch_size = 8
+    patch_size = 16
     num_classes = 17
     # dim = 16
     dim = 32
@@ -317,8 +324,8 @@ if __name__ == "__main__":
     mlp_dim = 64
     # mlp_dim = 64
     # mlp_dim = 2
-    dropout = 0.1
-    emb_dropout = 0.1
+    dropout = 0.01
+    emb_dropout = 0.01
     warmup_epochs = 10
 
     # Set seed for reproducibility
@@ -328,4 +335,6 @@ if __name__ == "__main__":
     batch_size = int(sys.argv[1])
     learning_rate = float(sys.argv[2])
     opt_name = sys.argv[3]
+    weight_decay = learning_rate/3
+    # weight_decay = learning_rate/3 #weight decay based on learning rate
     main(batch_size, learning_rate, opt_name)

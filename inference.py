@@ -6,11 +6,23 @@ from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_sc
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
-from load import CustomDataset
+from load import CustomDatasetTest
 from vit import ViT
 import torch
 import torch.nn as nn
 import pandas as pd
+
+global c
+global image_size
+global patch_size
+global num_classes
+global dim
+global depth
+global heads
+global mlp_dim
+global dropout
+global emb_dropout
+global warmup_epochs
 
 
 def to_device(data, device):
@@ -39,55 +51,31 @@ def main(filename, image_size):
     csv_test = 'jute-pest-classification/test.csv'
     img_test_dir = 'jute-pest-classification/test_images_'+str(image_size)+'_preprocessed/'
 
-    test_dataset = CustomDataset(csv_file=csv_test, image_dir=img_test_dir, transform=testTransform)
+    test_dataset = CustomDatasetTest(csv_file=csv_test, image_dir=img_test_dir, transform=testTransform)
     test_loader = DataLoader(test_dataset)
 
-    model = ViT()
-    model.load_state_dict(f"model/{filename}")
+    model = ViT(image_size=image_size, patch_size=patch_size, num_classes=num_classes, dim=dim, depth=depth, heads=heads, mlp_dim=mlp_dim, dropout=dropout, emb_dropout=emb_dropout, channels=c)
+    if torch.cuda.is_available():
+        model.load_state_dict(torch.load(f"../ViT/{filename}"))
+    else:
+        model.load_state_dict(torch.load(f"../ViT/{filename}", map_location=torch.device('cpu')))
     to_device(model, device)
     model.eval()
 
     predictions = []
-    true_labels = []
-    test_loss = 0.0
-    criterion = nn.CrossEntropyLoss()
     with torch.no_grad():
-        for inputs, labels in test_loader:
-            inputs, labels = to_device(inputs, device), to_device(labels, device)
+        for inputs in test_loader:
+            inputs = to_device(inputs, device)
             outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            test_loss += loss.item() * inputs.size(0)
             predictions.extend(outputs.cpu().numpy())
-            true_labels.extend(labels.cpu().numpy())
-    test_loss /= len(test_loader.dataset)
 
     predictions = np.array(predictions)
     pred_labels = np.argmax(predictions, axis=1)
-    # print(pred_labels)
-    # print(pred_labels.shape)
-    true_labels = np.array(true_labels)
-    # print(true_labels)
-    # print(true_labels.shape)
-
-    print(f"Test Loss: {test_loss:.6f}")
-
-    # Calculate metrics
-    test_f1 = f1_score(true_labels, pred_labels, average='macro')  # or 'micro', 'weighted'
-    test_accuracy = accuracy_score(true_labels, pred_labels)
-    test_precision = precision_score(true_labels, pred_labels, average='macro')  # or 'micro', 'weighted'
-    test_recall = recall_score(true_labels, pred_labels, average='macro')  # or 'micro', 'weighted'
-    # test_specificity = recall_score(true_labels, pred_labels.round(), pos_label=0)
-    # fpr, tpr, thresholds = roc_curve(true_labels, pred_labels)
-    # test_auc = auc(fpr, tpr)
-
-    print("Test F1:", test_f1)
-    print("Test Accuracy:", test_accuracy)
-    print("Test Precision:", test_precision)
-    print("Test Recall:", test_recall)
+    print(pred_labels)
 
     df = pd.read_csv(csv_test)
     df = df.drop(columns=['filename'])
-    df['class'] = predictions
+    # df['class'] = predictions
 
     dict_file_path = 'jute-pest-classification/transformation_dict.txt'
     label_dict = {}
@@ -97,12 +85,82 @@ def main(filename, image_size):
             key, value = line.strip().split(': ')
             label_dict[int(value)] = key  # Convert value to int for matching with predictions
 
-    decoded_labels = [label_dict[label] for label in pred_labels]
+    # decoded_labels = [label_dict[label] for label in pred_labels]
 
-    df['class'] = [label_dict[label] for label in df['class']]
+    df['class'] = [label_dict[label] for label in pred_labels]
 
     df.to_csv('final_predictions.csv', index=False)
 
 if __name__ == "__main__":
+
+    c, w, h = 3, 256, 256
+
+    weight_decay = 0.05
+    num_epochs = 1000
+
+    # #AWS
+    # image_size = 128
+    # patch_size = 16
+    # num_classes = 17
+    # dim = 16
+    # depth = 16
+    # heads = 16
+    # mlp_dim = 64
+    # dropout = 0.1
+    # emb_dropout = 0.1
+
+    # DGX-A100-1
+    #image_size = 256
+    #patch_size = 16
+    #num_classes = 17
+    #dim = 192
+    #depth = 9
+    #heads = 12
+    #mlp_dim = 384
+    #dropout = 0.01
+    #emb_dropout = 0.01
+    #warmup_epochs = 10
+
+    # DGX-V100-1
+    image_size = 256
+    patch_size = 16
+    num_classes = 17
+    # dim = 16
+    dim = 192
+    # depth = 16
+    depth = 9
+    # heads = 16
+    heads = 12
+    mlp_dim = 384
+    # mlp_dim = 64
+    # mlp_dim = 2
+    dropout = 0.1
+    emb_dropout = 0.1
+    warmup_epochs = 10
+
+
+
+    # # DGX-A100-2 (Grey)
+    # c, w, h = 1, 256, 256
+    #
+    # weight_decay = 0.00005
+    # num_epochs = 1000
+    #
+    # image_size = 256
+    # patch_size = 16
+    # num_classes = 17
+    # # dim = 16
+    # dim = 32
+    # # depth = 16
+    # depth = 16
+    # # heads = 16
+    # heads = 16
+    # mlp_dim = 64
+    # # mlp_dim = 64
+    # # mlp_dim = 2
+    # dropout = 0.01
+    # emb_dropout = 0.01
+    # warmup_epochs = 10
+
     main(sys.argv[1], int(sys.argv[2]))
 

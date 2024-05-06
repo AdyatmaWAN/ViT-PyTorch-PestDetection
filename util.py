@@ -6,7 +6,7 @@ import os
 import cv2
 
 global pixel
-pixel = 128
+pixel = 256
 
 def preprocess():
     folder = 'jute-pest-classification/'
@@ -146,13 +146,6 @@ def augment_images(images, output_dir):
         augmented_images_info.append((filename, label))
         output_path = os.path.join(output_dir, filename)
         cv2.imwrite(output_path, image)
-
-        # for angle in [0]:
-        #     rotated_image = image #cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-        #     augmented_filename = f"{filename.split('.')[0]}_rotated_{angle}.{filename.split('.')[1]}"
-        #     augmented_images_info.append((augmented_filename, label))
-        #     output_path = os.path.join(output_dir, augmented_filename)
-        #     cv2.imwrite(output_path, rotated_image)
 
     # Create threads
     threads = []
